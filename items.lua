@@ -72,15 +72,6 @@ minetest.register_craft({
 	},
 })
 
---minetest.register_craft({
---	output = 'cannons:stand',
---	recipe = {
---		{"default:wood", "", "default:wood"},
---		{"default:wood", "default:steelblock", "default:cobble"},
---		{"default:wood", "default:wood", "default:cobble"}
---	},
---})
-
 minetest.register_craft({
 	output = 'cannons:wood_stand',
 	recipe = {

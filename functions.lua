@@ -109,11 +109,13 @@ cannons.can_dig = function(pos,player)
 		end
 	end
 	
-cannons.formspec =
-	"size[8,9]"..
-	"list[current_name;muni;0,1;1,1;] label[0,0.5;Muni:]"..
-	"list[current_name;gunpowder;0,3;1,1;] label[0,2.5;Gunpowder:]"..
-	"list[current_player;main;0,5;8,4;]"
+cannons.formspec = [[
+	size[8,9]
+	list[current_name;muni;0,1;1,1;] label[0,0.5;Muni:]
+	list[current_name;gunpowder;0,3;1,1;] label[0,2.5;Gunpowder:]
+	field[3,2;3,0.8;angle;Angle to horisont;30]
+	list[current_player;main;0,5;8,4;]
+]]
 if default and default.gui_bg then 
 	cannons.formspec = cannons.formspec..default.gui_bg;
 end
