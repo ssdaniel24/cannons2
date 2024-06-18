@@ -635,6 +635,9 @@ function cannons.register_cannon(name, def)
 		on_metadata_inventory_take = cannons.inventory_modified,
 		on_metadata_inventory_move = cannons.inventory_modified,
 	})
+	if def.recipe then
+		minetest.register_craft({ output = name, recipe = def.recipe, })
+	end
 end
 
 function cannons.register_stand(name, def)
@@ -652,6 +655,9 @@ function cannons.register_stand(name, def)
 		sounds = default.node_sound_wood_defaults(),
 		on_rightclick = cannons.stand_on_rightclick
 	})
+	if def.recipe then
+		minetest.register_craft({ output = name, recipe = def.recipe, })
+	end
 end
 
 function cannons.register_cannon_with_stand(name, def)

@@ -55,35 +55,6 @@ minetest.register_craft({
 -- new crafts --
 
 minetest.register_craft({
-	output = "cannons:cannon_steel",
-	recipe = {
-		{"default:steelblock", "default:steelblock", "default:steelblock"},
-		{"cannons:gunpowder", "default:mese_block", ""},
-		{"default:steelblock", "default:steelblock", "default:steelblock"}
-	},
-})
-
-minetest.register_craft({
-	output = "cannons:cannon_bronze",
-	recipe = {
-		{"default:bronzeblock", "default:bronzeblock", "default:bronzeblock"},
-		{"cannons:gunpowder", "default:mese_block", ""},
-		{"default:bronzeblock", "default:bronzeblock", "default:bronzeblock"}
-	},
-})
-
-minetest.register_craft({
-	output = 'cannons:wood_stand',
-	recipe = {
-		{"default:wood", "", "default:wood"},
-		{"default:wood", "default:steelblock", "default:wood"},
-		{"default:wood", "default:wood", "default:wood"}
-	},
-})
-
-
-
-minetest.register_craft({
 	output = 'cannons:ball_wood 5',
 	recipe = {
 		{"","default:wood",""},
@@ -136,11 +107,21 @@ end
 cannons.register_cannon("cannons:cannon_steel", {
 	desc = "steel cannon",
 	tiles = {"cannons_steel_top.png","cannons_steel_side.png"},
+	recipe = {
+		{"default:steelblock", "default:steelblock", "default:steelblock"},
+		{"cannons:gunpowder", "default:mese_block", ""},
+		{"default:steelblock", "default:steelblock", "default:steelblock"}
+	},
 })
 
 cannons.register_cannon("cannons:cannon_bronze", {
 	desc = "bronze cannon",
 	tiles = {"cannons_bronze_top.png","cannons_bronze_side.png"},
+	recipe = {
+		{"default:bronzeblock", "default:bronzeblock", "default:bronzeblock"},
+		{"cannons:gunpowder", "default:mese_block", ""},
+		{"default:bronzeblock", "default:bronzeblock", "default:bronzeblock"}
+	},
 })
 
 
@@ -148,6 +129,11 @@ cannons.register_stand("cannons:wood_stand", {
 	desc = "Wooden cannon stand",
 	tiles = {"default_wood.png^cannons_rim.png","default_wood.png"},
 	mesh = "cannonstand.obj",
+	recipe = {
+		{"default:wood", "", "default:wood"},
+		{"default:wood", "default:steelblock", "default:wood"},
+		{"default:wood", "default:wood", "default:wood"}
+	},
 })
 
 cannons.register_stand("cannons:ship_stand", {
