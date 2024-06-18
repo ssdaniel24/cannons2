@@ -113,7 +113,8 @@ cannons.formspec = [[
 	size[8,9]
 	list[current_name;muni;0,1;1,1;] label[0,0.5;Muni:]
 	list[current_name;gunpowder;0,3;1,1;] label[0,2.5;Gunpowder:]
-	field[3,2;3,0.8;angle;Angle to horisont;30]
+	field[3,2;3,0.8;angle;Angle (from 0 to 50);${cannon_angle}]
+	field_close_on_enter[angle;false]
 	list[current_player;main;0,5;8,4;]
 ]]
 if default and default.gui_bg then 
@@ -146,16 +147,16 @@ if default and default.gui_slots then
 end
 	
 cannons.on_construct = function(pos)
-	local node = minetest.get_node({x = pos.x ,y = pos.y, z = pos.z})
-		if minetest.registered_items[node.name].cannons then
-		local meta = minetest.get_meta(pos)
+	local node = minetest.get_node(pos)
+	local meta = minetest.get_meta(pos)
+	meta:set_int("cannon_angle", 30)
+	if minetest.registered_items[node.name].cannons then
 		meta:set_string("formspec", cannons.formspec)
 		meta:set_string("infotext", "Cannon has no muni and no gunpowder")
 		local inv = meta:get_inventory()
 		inv:set_size("gunpowder", 1)
 		inv:set_size("muni", 1)
 	else
-		local meta = minetest.get_meta(pos)
 		meta:set_string("formspec", cannons.disabled_formspec)
 		meta:set_string("infotext", "Cannon is out of order")
 	end
@@ -611,6 +612,24 @@ cannons.register_muni("default:apple",apple)
 
 -- refactored:
 
+local function clamp(min, val, max)
+	if val < min then
+		return val
+	elseif val > max then
+		return max
+	else
+		return val
+	end
+end
+
+function cannons.on_receive_fields(pos, _, fields, _)
+	local meta = minetest.get_meta(pos)
+	local angle = tonumber(fields.angle)
+	if not angle then return end
+	local clamped_angle = clamp(0, angle, 50)
+	meta:set_int("cannon_angle", clamped_angle)
+end
+
 function cannons.register_cannon(name, def)
 	minetest.register_node(name, {
 		description = def.desc,
@@ -683,6 +702,7 @@ function cannons.register_cannon_with_stand(name, def)
 		allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
 		on_metadata_inventory_put = cannons.inventory_modified,	
 		on_metadata_inventory_take = cannons.inventory_modified,	
-		on_metadata_inventory_move = cannons.inventory_modified,	
+		on_metadata_inventory_move = cannons.inventory_modified,
+		on_receive_fields = cannons.on_receive_fields,
 	})
 end
