@@ -133,191 +133,61 @@ end
 --+ cannon stuff                     +
 --++++++++++++++++++++++++++++++++++++
 
---steel cannon
-minetest.register_node("cannons:cannon_steel", {
-	description = "steel cannon",
-	stack_max = 1,
-	--tiles = {"cannon_cannon_top.png","cannon_cannon_top.png","cannon_cannon_side.png","cannon_cannon_side.png","cannon_cannon_top.png^cannons_rim.png","cannon_cannon_side.png"},
+cannons.register_cannon("cannons:cannon_steel", {
+	desc = "steel cannon",
 	tiles = {"cannons_steel_top.png","cannons_steel_side.png"},
-	drawtype = "mesh",
-	selection_box = cannons.nodeboxes.cannon,
-	collision_box = cannons.nodeboxes.cannon,
-	mesh = "cannon.obj",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {cracky=1,cannon=1},
-	sounds = cannons.sound_defaults(),
-	--node_box = cannons.nodeboxes.cannon,
-	on_punch = cannons.punched,
-	mesecons = cannons.supportMesecons,
-	on_construct = cannons.on_construct,
-	can_dig = cannons.can_dig,
-	allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-	allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-	on_metadata_inventory_put = cannons.inventory_modified,	
-	on_metadata_inventory_take = cannons.inventory_modified,	
-	on_metadata_inventory_move = cannons.inventory_modified,	
 })
 
---bronze cannon
-minetest.register_node("cannons:cannon_bronze", {
-	description = "bronze cannon",
-	stack_max = 1,
-	--tiles = {"cannon_cannon_top.png","cannon_cannon_top.png","cannon_cannon_side.png","cannon_cannon_side.png","cannon_cannon_top.png^cannons_rim.png","cannon_cannon_side.png"},
+cannons.register_cannon("cannons:cannon_bronze", {
+	desc = "bronze cannon",
 	tiles = {"cannons_bronze_top.png","cannons_bronze_side.png"},
-	drawtype = "mesh",
-	selection_box = cannons.nodeboxes.cannon,
-	collision_box = cannons.nodeboxes.cannon,
-	mesh = "cannon.obj",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {cracky=1,cannon=1},
-	sounds = cannons.sound_defaults(),
-	--node_box = cannons.nodeboxes.cannon,
-	on_punch = cannons.punched,
-	mesecons = cannons.supportMesecons,
-	on_construct = cannons.on_construct,
-	can_dig = cannons.can_dig,
-	allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-	allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-	on_metadata_inventory_put = cannons.inventory_modified,	
-	on_metadata_inventory_take = cannons.inventory_modified,	
-	on_metadata_inventory_move = cannons.inventory_modified,	
 })
 
-minetest.register_node("cannons:wood_stand", {
-	description = "Wooden cannon stand",
-	stack_max = 9,
-	--tiles = side								other
+
+cannons.register_stand("cannons:wood_stand", {
+	desc = "Wooden cannon stand",
 	tiles = {"default_wood.png^cannons_rim.png","default_wood.png"},
-	selection_box = cannons.nodeboxes.stand,
-	collision_box = cannons.nodeboxes.stand,
 	mesh = "cannonstand.obj",
-	drawtype = "mesh",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {choppy=2,cannonstand=1},
-	sounds = default.node_sound_wood_defaults(),
-	on_rightclick = cannons.stand_on_rightclick
 })
 
-minetest.register_node("cannons:ship_stand", {
-	description = "Wooden cannon stand",
-	stack_max = 9,
-	--tiles = wheel					material			side
+cannons.register_stand("cannons:ship_stand", {
+	desc = "Wooden cannon ship stand",
 	tiles = {"cannons_steel_top.png","default_wood.png","default_wood.png^cannons_rim.png"},
-	selection_box = cannons.nodeboxes.stand,
-	collision_box = cannons.nodeboxes.stand,
 	mesh = "ship_cannonstand.obj",
-	drawtype = "mesh",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {choppy=2,cannonstand=1},
-	sounds = default.node_sound_wood_defaults(),
-	on_rightclick = cannons.stand_on_rightclick
 })
---wooden stand with steel cannon
---in German: Holzständer mit Stahkanone
-minetest.register_node("cannons:wood_stand_with_cannon_steel", {
-	description = "wooden stand with steel cannon",
-	cannons ={stand="cannons:wood_stand",cannon="cannons:cannon_steel"},
-	stack_max = 0,
+
+
+cannons.register_cannon_with_stand("cannons:wood_stand_with_cannon_steel", {
+	desc = "Stand with steel cannon",
+	stand = "cannons:wood_stand",
+	cannon = "cannons:cannon_steel",
 	tiles = {"cannons_steel_top.png","cannons_steel_side.png","default_wood.png","default_wood.png^cannons_rim.png","cannons_steel_top.png"},
 	mesh = "cannonstand_cannon.obj",
-	selection_box = cannons.nodeboxes.cannon,
-	collision_box = cannons.nodeboxes.cannon,
-	drawtype = "mesh",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {cracky=2,cannonstand=1},
-	sounds = cannons.sound_defaults(),
-	on_punch = cannons.punched,
-	mesecons = cannons.supportMesecons,
-	on_construct = cannons.on_construct,
-	can_dig = cannons.can_dig,
-	on_dig = cannons.dug,
-	allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-	allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-	on_metadata_inventory_put = cannons.inventory_modified,	
-	on_metadata_inventory_take = cannons.inventory_modified,	
-	on_metadata_inventory_move = cannons.inventory_modified,	
-})	
+})
 
-minetest.register_node("cannons:ship_stand_with_cannon_steel", {
-	description = "ship stand with steel cannon",
-	cannons ={stand="cannons:ship_stand",cannon="cannons:cannon_steel"},
-	stack_max = 0,
-	tiles = {"cannons_steel_top.png","cannons_steel_side.png","cannons_steel_top.png","default_wood.png","default_wood.png^cannons_rim.png"},
-	mesh = "ship_cannonstand_cannon.obj",
-	selection_box = cannons.nodeboxes.cannon,
-	collision_box = cannons.nodeboxes.cannon,
-	drawtype = "mesh",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {cracky=2,cannonstand=1},
-	sounds = cannons.sound_defaults(),
-	on_punch = cannons.punched,
-	mesecons = cannons.supportMesecons,
-	on_construct = cannons.on_construct,
-	can_dig = cannons.can_dig,
-	on_dig = cannons.dug,
-	allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-	allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-	on_metadata_inventory_put = cannons.inventory_modified,	
-	on_metadata_inventory_take = cannons.inventory_modified,	
-	on_metadata_inventory_move = cannons.inventory_modified,	
-})	
-
-minetest.register_node("cannons:ship_stand_with_cannon_bronze", {
-	description = "ship stand with bronze cannon",
-	cannons ={stand="cannons:ship_stand",cannon="cannons:cannon_bronze"},
-	stack_max = 0,
-	tiles = {"cannons_bronze_top.png","cannons_bronze_side.png","cannons_steel_top.png","default_wood.png","default_wood.png^cannons_rim.png"},
-	mesh = "ship_cannonstand_cannon.obj",
-	selection_box = cannons.nodeboxes.cannon,
-	collision_box = cannons.nodeboxes.cannon,
-	drawtype = "mesh",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {cracky=2,cannonstand=1},
-	sounds = cannons.sound_defaults(),
-	on_punch = cannons.punched,
-	mesecons = cannons.supportMesecons,
-	on_construct = cannons.on_construct,
-	can_dig = cannons.can_dig,
-	on_dig = cannons.dug,
-	allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-	allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-	on_metadata_inventory_put = cannons.inventory_modified,	
-	on_metadata_inventory_take = cannons.inventory_modified,	
-	on_metadata_inventory_move = cannons.inventory_modified,	
-})	
---wooden stand with bronze cannon --
---in German: Holzständer mit Bronzekanone
-minetest.register_node("cannons:wood_stand_with_cannon_bronze", {
-	description = "wooden stand with bronze cannon",
-	cannons ={stand="cannons:wood_stand",cannon="cannons:cannon_bronze"},
-	stack_max = 0,
+cannons.register_cannon_with_stand("cannons:wood_stand_with_cannon_bronze", {
+	desc = "Stand with bronze cannon",
+	stand = "cannons:wood_stand",
+	cannon = "cannons:cannon_bronze",
 	tiles = {"cannons_bronze_top.png","cannons_bronze_side.png","default_wood.png","default_wood.png^cannons_rim.png","cannons_steel_top.png"},
 	mesh = "cannonstand_cannon.obj",
-	selection_box = cannons.nodeboxes.cannon,
-	collision_box = cannons.nodeboxes.cannon,
-	drawtype = "mesh",
-	paramtype = "light",
-	paramtype2 = "facedir",
-	groups = {cracky=2,cannonstand=1},
-	sounds = cannons.sound_defaults(),
-	on_punch = cannons.punched,
-	mesecons = cannons.supportMesecons,
-	on_construct = cannons.on_construct,
-	can_dig = cannons.can_dig,
-	on_dig = cannons.dug,
-	allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-	allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-	on_metadata_inventory_put = cannons.inventory_modified,	
-	on_metadata_inventory_take = cannons.inventory_modified,	
-	on_metadata_inventory_move = cannons.inventory_modified,	
-})	
+})
+
+cannons.register_cannon_with_stand("cannons:ship_stand_with_cannon_steel", {
+	desc = "Ship stand with steel cannon",
+	stand = "cannons:ship_stand",
+	cannon = "cannons:cannon_steel",
+	tiles = {"cannons_steel_top.png","cannons_steel_side.png","cannons_steel_top.png","default_wood.png","default_wood.png^cannons_rim.png"},
+	mesh = "ship_cannonstand_cannon.obj",
+})
+
+cannons.register_cannon_with_stand("cannons:ship_stand_with_cannon_bronze", {
+	desc = "Ship stand with bronze cannon",
+	stand = "cannons:ship_stand",
+	cannon = "cannons:cannon_bronze",
+	tiles = {"cannons_bronze_top.png","cannons_bronze_side.png","cannons_steel_top.png","default_wood.png","default_wood.png^cannons_rim.png"},
+	mesh = "ship_cannonstand_cannon.obj",
+})
 
 --++++++++++++++++++++++++++++++++++++
 --+ cannon balls                     +

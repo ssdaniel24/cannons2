@@ -607,3 +607,76 @@ local apple={
 
 }
 cannons.register_muni("default:apple",apple)
+
+
+-- refactored:
+
+function cannons.register_cannon(name, def)
+	minetest.register_node(name, {
+		description = def.desc,
+		stack_max = 1,
+		tiles = def.tiles,
+		drawtype = "mesh",
+		selection_box = cannons.nodeboxes.cannon,
+		collision_box = cannons.nodeboxes.cannon,
+		mesh = "cannon.obj",
+		paramtype = "light",
+		paramtype2 = "facedir",
+		groups = {cracky=1,cannon=1},
+		sounds = cannons.sound_defaults(),
+		--node_box = cannons.nodeboxes.cannon,
+		on_punch = cannons.punched,
+		mesecons = cannons.supportMesecons,
+		on_construct = cannons.on_construct,
+		can_dig = cannons.can_dig,
+		allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,
+		allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,
+		on_metadata_inventory_put = cannons.inventory_modified,
+		on_metadata_inventory_take = cannons.inventory_modified,
+		on_metadata_inventory_move = cannons.inventory_modified,
+	})
+end
+
+function cannons.register_stand(name, def)
+	minetest.register_node(name, {
+		description = def.desc,
+		stack_max = 9,
+		tiles = def.tiles,
+		selection_box = cannons.nodeboxes.stand,
+		collision_box = cannons.nodeboxes.stand,
+		mesh = def.mesh,
+		drawtype = "mesh",
+		paramtype = "light",
+		paramtype2 = "facedir",
+		groups = {choppy=2,cannonstand=1},
+		sounds = default.node_sound_wood_defaults(),
+		on_rightclick = cannons.stand_on_rightclick
+	})
+end
+
+function cannons.register_cannon_with_stand(name, def)
+	minetest.register_node(name, {
+		description = def.desc,
+		cannons ={stand=def.stand,cannon=def.cannon},
+		stack_max = 0,
+		tiles = def.tiles,
+		mesh = def.mesh,
+		selection_box = cannons.nodeboxes.cannon,
+		collision_box = cannons.nodeboxes.cannon,
+		drawtype = "mesh",
+		paramtype = "light",
+		paramtype2 = "facedir",
+		groups = {cracky=2,cannonstand=1},
+		sounds = cannons.sound_defaults(),
+		on_punch = cannons.punched,
+		mesecons = cannons.supportMesecons,
+		on_construct = cannons.on_construct,
+		can_dig = cannons.can_dig,
+		on_dig = cannons.dug,
+		allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
+		allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
+		on_metadata_inventory_put = cannons.inventory_modified,	
+		on_metadata_inventory_take = cannons.inventory_modified,	
+		on_metadata_inventory_move = cannons.inventory_modified,	
+	})
+end
