@@ -22,7 +22,7 @@ local function get_cannon_infotext(meta)
 	elseif not gunpowder then
 		return "Cannon has no gunpowder"
 	else
-		return "Cannon is ready"
+		return "Cannon is ready ("..muni..")"
 	end
 end
 
@@ -267,13 +267,32 @@ function cannons.punched(pos, node, puncher)
 		return
 	end
 	local wield = puncher:get_wielded_item()
-	if not wield then
+	if not wield then return end
+	local wield_name = wield:get_name()
+	if not wield_name then return end
+	local field_name
+	if wield_name == 'default:torch' then
+		cannons.fire(pos,node,puncher)
+		return
+	elseif cannons.is_muni(wield_name) then
+		field_name = "muni"
+	elseif cannons.is_gunpowder(wield_name) then
+		field_name = "gunpowder"
+	else
 		return
 	end
-	wield = wield:get_name()
-	if wield and wield == 'default:torch' then
-		cannons.fire(pos,node,puncher)
+
+	local meta = minetest.get_meta(pos)
+	if not meta:get_string(field_name) == "" then
+		return
 	end
+
+	meta:set_string(field_name, wield_name)
+	if not minetest.is_creative_enabled(puncher:get_player_name()) then
+		wield:take_item()
+	end
+	meta:set_string("infotext", get_cannon_infotext(meta))
+	puncher:set_wielded_item(wield)
 end
 
 --++++++++++++++++++++++++++++++++++++
@@ -369,7 +388,7 @@ function cannons.get_entity(node)
 	return cannons.registered_muni[node].obj
 end
 function cannons.get_settings(node)
-	return cannons.registered_muni[node].entity	
+	return cannons.registered_muni[node].entity
 end
 
 --++++++++++++++++++++++++++++++++++++
@@ -645,44 +664,11 @@ function cannons.register_cannon_with_stand(name, def)
 		paramtype2 = "facedir",
 		groups = {cracky=2,cannonstand=1},
 		sounds = cannons.sound_defaults(),
-		on_punch = function(pos, node, puncher)
-			local meta = minetest.get_meta(pos)
-			print(meta:get_string("muni"), meta:get_string("gunpowder"))
-			cannons.punched(pos, node, puncher)
-		end,
+		on_punch = cannons.punched,
 		mesecons = cannons.supportMesecons,
 		on_construct = cannons.on_construct,
 		can_dig = cannons.can_dig,
 		on_dig = cannons.dug,
-		on_rightclick = function(pos, _, clicker, itemstack, _)
-			print("hit", dump(pos), clicker:get_player_name(), itemstack:get_name())
-			if not clicker or not clicker:is_player() then
-				return
-			end
-
-			local item = itemstack:get_name()
-			local field_name
-			print(cannons.is_muni(item), cannons.is_gunpowder(item))
-			if cannons.is_muni(item) then
-				field_name = "muni"
-			elseif cannons.is_gunpowder(item) then
-				field_name = "gunpowder"
-			else
-				return
-			end
-
-			local meta = minetest.get_meta(pos)
-			if not meta:get_string(field_name) == "" then
-				return
-			end
-
-			meta:set_string(field_name, item)
-			if not minetest.is_creative_enabled(clicker:get_player_name()) then
-				itemstack:take_item()
-			end
-			meta:set_string("infotext", get_cannon_infotext(meta))
-			return itemstack
-		end,
 		on_receive_fields = cannons.on_receive_fields,
 	})
 end
