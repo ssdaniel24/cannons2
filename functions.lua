@@ -6,8 +6,15 @@ local DEFAULT_ANGLE = 10
 ---@param meta NodeMetaRef
 ---@return string
 local function get_cannon_infotext(meta)
-	local muni = meta:get_string("muni")
-	local gunpowder = meta:get_string("gunpowder")
+	local function meta_get_string_or_nil(field)
+		local str = meta:get_string(field)
+		if str == "" then
+			return nil
+		end
+		return str
+	end
+	local muni = meta_get_string_or_nil("muni")
+	local gunpowder = meta_get_string_or_nil("gunpowder")
 	if not muni and not gunpowder then
 		return "Cannon has no muni and no gunpowder"
 	elseif not muni then
@@ -63,12 +70,9 @@ cannons.can_dig = function(pos,player)
 	end
 
 cannons.formspec = [[
-	size[8,9]
-	list[current_name;muni;0,1;1,1;] label[0,0.5;Muni:]
-	list[current_name;gunpowder;0,3;1,1;] label[0,2.5;Gunpowder:]
-	]] .. "field[3,2;3,0.8;angle;Angle (from " .. MIN_ANGLE .. " to " .. MAX_ANGLE .. ");${cannon_angle}]" .. [[
+	size[5,2]
+	]] .. "field[1,1;4,0.8;angle;Angle (from " .. MIN_ANGLE .. " to " .. MAX_ANGLE .. ");${cannon_angle}]" .. [[
 	field_close_on_enter[angle;false]
-	list[current_player;main;0,5;8,4;]
 ]]
 cannons.disabled_formspec =
 	"size[8,9]"..
@@ -641,7 +645,11 @@ function cannons.register_cannon_with_stand(name, def)
 		paramtype2 = "facedir",
 		groups = {cracky=2,cannonstand=1},
 		sounds = cannons.sound_defaults(),
-		on_punch = cannons.punched,
+		on_punch = function(pos, node, puncher)
+			local meta = minetest.get_meta(pos)
+			print(meta:get_string("muni"), meta:get_string("gunpowder"))
+			cannons.punched(pos, node, puncher)
+		end,
 		mesecons = cannons.supportMesecons,
 		on_construct = cannons.on_construct,
 		can_dig = cannons.can_dig,
@@ -649,11 +657,6 @@ function cannons.register_cannon_with_stand(name, def)
 		on_rightclick = function(pos, _, clicker, itemstack, _)
 			print("hit", dump(pos), clicker:get_player_name(), itemstack:get_name())
 			if not clicker or not clicker:is_player() then
-				return
-			end
-
-			local meta = minetest.get_meta(pos)
-			if meta:get_string(field_name) == "" then
 				return
 			end
 
@@ -665,6 +668,11 @@ function cannons.register_cannon_with_stand(name, def)
 			elseif cannons.is_gunpowder(item) then
 				field_name = "gunpowder"
 			else
+				return
+			end
+
+			local meta = minetest.get_meta(pos)
+			if not meta:get_string(field_name) == "" then
 				return
 			end
 
