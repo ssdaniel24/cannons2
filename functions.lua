@@ -1,3 +1,7 @@
+local MAX_ANGLE = 20
+local MIN_ANGLE = 0
+local DEFAULT_ANGLE = 10
+
 
 function cannons.destroy(pos,range)
 	for x=-range,range do
@@ -113,7 +117,7 @@ cannons.formspec = [[
 	size[8,9]
 	list[current_name;muni;0,1;1,1;] label[0,0.5;Muni:]
 	list[current_name;gunpowder;0,3;1,1;] label[0,2.5;Gunpowder:]
-	field[3,2;3,0.8;angle;Angle (from 0 to 50);${cannon_angle}]
+	]] .. "field[3,2;3,0.8;angle;Angle (from " .. MIN_ANGLE .. " to " .. MAX_ANGLE .. ");${cannon_angle}]" .. [[
 	field_close_on_enter[angle;false]
 	list[current_player;main;0,5;8,4;]
 ]]
@@ -149,7 +153,7 @@ end
 cannons.on_construct = function(pos)
 	local node = minetest.get_node(pos)
 	local meta = minetest.get_meta(pos)
-	meta:set_int("cannon_angle", 30)
+	meta:set_int("cannon_angle", DEFAULT_ANGLE)
 	if minetest.registered_items[node.name].cannons then
 		meta:set_string("formspec", cannons.formspec)
 		meta:set_string("infotext", "Cannon has no muni and no gunpowder")
@@ -304,9 +308,10 @@ function cannons.fire(pos,node,puncher)
 		cannons.inventory_modified(pos)
 
 
+		local input_angle = meta:get_int("cannon_angle")
 		local settings = cannons.get_settings(muni.name)
 		local obj=minetest.add_entity(pos, cannons.get_entity(muni.name))
-		obj:set_velocity({x=dir.x*settings.velocity, y=-1, z=dir.z*settings.velocity})
+		obj:set_velocity({x=dir.x*settings.velocity, y=input_angle - 2, z=dir.z*settings.velocity})
 		obj:set_acceleration({x=dir.x*-3, y=-settings.gravity, z=dir.z*-3})
 
 		minetest.add_particlespawner({
@@ -610,6 +615,10 @@ local apple={
 cannons.register_muni("default:apple",apple)
 
 
+
+
+
+
 -- refactored:
 
 local function clamp(min, val, max)
@@ -626,7 +635,7 @@ function cannons.on_receive_fields(pos, _, fields, _)
 	local meta = minetest.get_meta(pos)
 	local angle = tonumber(fields.angle)
 	if not angle then return end
-	local clamped_angle = clamp(0, angle, 50)
+	local clamped_angle = clamp(MIN_ANGLE, angle, MAX_ANGLE)
 	meta:set_int("cannon_angle", clamped_angle)
 end
 
