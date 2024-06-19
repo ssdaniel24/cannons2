@@ -3,6 +3,23 @@ local MIN_ANGLE = 0
 local DEFAULT_ANGLE = 10
 
 
+---@param meta NodeMetaRef
+---@return string
+local function get_cannon_infotext(meta)
+	local muni = meta:get_string("muni")
+	local gunpowder = meta:get_string("gunpowder")
+	if not muni and not gunpowder then
+		return "Cannon has no muni and no gunpowder"
+	elseif not muni then
+		return "Cannon has no muni"
+	elseif not gunpowder then
+		return "Cannon has no gunpowder"
+	else
+		return "Cannon is ready"
+	end
+end
+
+
 function cannons.destroy(pos,range)
 	for x=-range,range do
 	for y=-range,range do
@@ -31,75 +48,7 @@ function cannons.sound_defaults(table)
 			{name="default_place_node_hard", gain=1.0}
 	return table
 end
-function cannons.inventory_modified(pos)
-	local meta = minetest.get_meta(pos)
-	local inv = meta:get_inventory()
-	local muni = inv:get_stack("muni", 1):to_table()
-	local gunpowder = inv:get_stack("gunpowder", 1):to_table();
-	local addition = ""
-	if  meta:get_string("owner") ~="" then
-		addition = " (owned by "..meta:get_string("owner")..")"
-	end
-	if muni == nil then
-		muni = false
-	else
-		muni = cannons.is_muni(muni.name)
-	end
-	if gunpowder == nil then
-		gunpowder = false;
-	else
-		gunpowder = cannons.is_gunpowder(gunpowder.name)
-	end
-	
-	if not muni and not gunpowder then
-		meta:set_string("infotext","Cannon has no muni and no gunpowder"..addition)
-	
-	elseif not muni then
-		meta:set_string("infotext","Cannon has no muni"..addition)
-	
-	elseif not gunpowder then
-		meta:set_string("infotext","Cannon has no gunpowder"..addition)
-		
-	else
-		meta:set_string("infotext","Cannon is ready"..addition)
-	end		
-end
 
-cannons.allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-		
-		local meta = minetest.get_meta(pos)
-		if(meta:get_string("owner") ~="" and not( locks:lock_allow_use( pos, player ))) then
-		   return 0;
-		end
-		local inv = meta:get_inventory()
-		stack = stack:to_table()
-		if listname == "gunpowder" and cannons.is_gunpowder(stack.name) then	
-			return stack.count
-		elseif listname == "muni" and cannons.is_muni(stack.name) then	
-			return stack.count
-		else return 0
-		end
-
-	end
-	
-cannons.allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
-
-		local meta = minetest.get_meta(pos)
-		if(meta:get_string("owner") ~="" and not( locks:lock_allow_use( pos, player ))) then
-		   return 0;
-		end
-		local inv = meta:get_inventory()
-		local stack = inv:get_stack(from_list, from_index)
-		stack = stack:to_table()
-		if to_list == "gunpowder" and cannons.is_gunpowder(stack.name) then
-			return count
-		
-		elseif to_list == "muni" and  cannons.is_muni(stack.name) then
-			return count
-		else
-			return 0
-		end
-	end
 	
 cannons.can_dig = function(pos,player)
 		local meta = minetest.get_meta(pos);
@@ -234,53 +183,39 @@ function cannons.nodehitparticles(pos,node)
 end
 
 function cannons.fire(pos,node,puncher)
+	if not puncher then
+		return
+	end
 	local meta = minetest.get_meta(pos)
-	local inv = meta:get_inventory()
-	local muni = inv:get_stack("muni", 1):to_table();
-	local gunpowder = inv:get_stack("gunpowder", 1):to_table();
-	local dir = {}
-	--print(muni ~= nil,cannons.is_muni(muni.name),inv:contains_item("muni",muni.name.." 1"),gunpowder ~= nil ,cannons.is_gunpowder(gunpowder.name),inv:contains_item("gunpowder",gunpowder.name.." 1"))
-	if  muni ~= nil 
-		and cannons.is_muni(muni.name) 
-		and inv:contains_item("muni",muni.name.." 1")
-		and gunpowder ~= nil
-		and cannons.is_gunpowder(gunpowder.name)
-		and inv:contains_item("gunpowder",gunpowder.name.." 1")
-	
-	then 
-		if puncher ~= nil then
-			dir=puncher:get_look_dir()
-			meta:set_string("dir", minetest.serialize(dir))
-		else			
-			dir = minetest.deserialize(meta:get_string("dir"));
-			if dir == nil then
-				return
-			end
-		end	
+	---@type string
+	local muni = meta:get_string("muni")
+	---@type string
+	local gunpowder = meta:get_string("gunpowder")
+	if  cannons.is_muni(muni) and cannons.is_gunpowder(gunpowder) then
+		local dir=puncher:get_look_dir()
+
 		minetest.sound_play("cannons_shot",
 			{pos = pos, gain = 1.0, max_hear_distance = 32,})
-		
 
-		inv:remove_item("muni", muni.name.." 1")
-		inv:remove_item("gunpowder", gunpowder.name.." 1")
-		cannons.inventory_modified(pos)
-
+		meta:set_string("muni", "")
+		meta:set_string("gunpowder", "")
+		meta:set_string("infotext", get_cannon_infotext(meta))
 
 		local input_angle = meta:get_int("cannon_angle")
-		local settings = cannons.get_settings(muni.name)
-		local obj=minetest.add_entity(pos, cannons.get_entity(muni.name))
+		local settings = cannons.get_settings(muni)
+		local obj=minetest.add_entity(pos, cannons.get_entity(muni))
 		obj:set_velocity({x=dir.x*settings.velocity, y=input_angle - 2, z=dir.z*settings.velocity})
 		obj:set_acceleration({x=dir.x*-3, y=-settings.gravity, z=dir.z*-3})
 
 		minetest.add_particlespawner({
 			amount = 50,
 			-- Number of particles spawned over the time period `time`.
-		
+
 			time = 0.5,
 			-- Lifespan of spawner in seconds.
 			-- If time is 0 spawner has infinite lifespan and spawns the `amount` on
 			-- a per-second basis.
-		
+
 			minpos = pos,
 			maxpos = pos,
 			minvel = {x=dir.x*settings.velocity, y=-1, z=dir.z*settings.velocity},
@@ -711,11 +646,35 @@ function cannons.register_cannon_with_stand(name, def)
 		on_construct = cannons.on_construct,
 		can_dig = cannons.can_dig,
 		on_dig = cannons.dug,
-		allow_metadata_inventory_put = cannons.allow_metadata_inventory_put,	
-		allow_metadata_inventory_move = cannons.allow_metadata_inventory_move,	
-		on_metadata_inventory_put = cannons.inventory_modified,	
-		on_metadata_inventory_take = cannons.inventory_modified,	
-		on_metadata_inventory_move = cannons.inventory_modified,
+		on_rightclick = function(pos, _, clicker, itemstack, _)
+			print("hit", dump(pos), clicker:get_player_name(), itemstack:get_name())
+			if not clicker or not clicker:is_player() then
+				return
+			end
+
+			local meta = minetest.get_meta(pos)
+			if meta:get_string(field_name) == "" then
+				return
+			end
+
+			local item = itemstack:get_name()
+			local field_name
+			print(cannons.is_muni(item), cannons.is_gunpowder(item))
+			if cannons.is_muni(item) then
+				field_name = "muni"
+			elseif cannons.is_gunpowder(item) then
+				field_name = "gunpowder"
+			else
+				return
+			end
+
+			meta:set_string(field_name, item)
+			if not minetest.is_creative_enabled(clicker:get_player_name()) then
+				itemstack:take_item()
+			end
+			meta:set_string("infotext", get_cannon_infotext(meta))
+			return itemstack
+		end,
 		on_receive_fields = cannons.on_receive_fields,
 	})
 end
