@@ -112,7 +112,7 @@ cannons.can_dig = function(pos,player)
 			return true
 		end
 	end
-	
+
 cannons.formspec = [[
 	size[8,9]
 	list[current_name;muni;0,1;1,1;] label[0,0.5;Muni:]
@@ -121,35 +121,11 @@ cannons.formspec = [[
 	field_close_on_enter[angle;false]
 	list[current_player;main;0,5;8,4;]
 ]]
-if default and default.gui_bg then 
-	cannons.formspec = cannons.formspec..default.gui_bg;
-end
-
-if default and default.gui_bg_img then 
-	cannons.formspec = cannons.formspec..default.gui_bg_img;
-end
-
-if default and default.gui_slots then 
-	cannons.formspec = cannons.formspec..default.gui_slots;
-end
-
 cannons.disabled_formspec =
 	"size[8,9]"..
 	"label[1,0.5;Cannon is Disabled. Place it on a cannonstand to activate it]"..
 	"list[current_player;main;0,5;8,4;]"
-	
-if default and default.gui_bg then 
-	cannons.disabled_formspec = cannons.disabled_formspec..default.gui_bg;
-end
 
-if default and default.gui_bg_img then 
-	cannons.disabled_formspec = cannons.disabled_formspec..default.gui_bg_img;
-end
-
-if default and default.gui_slots then 
-	cannons.disabled_formspec = cannons.disabled_formspec..default.gui_slots;
-end
-	
 cannons.on_construct = function(pos)
 	local node = minetest.get_node(pos)
 	local meta = minetest.get_meta(pos)
@@ -200,24 +176,6 @@ cannons.dug = function(pos, node, digger)
 		local inv =  digger:get_inventory()
 		local stack = inv:add_item("main", ItemStack(cannons.cannon))--add the cannon to the ineentory
 		minetest.item_drop(stack, digger, pos)
-	end
-end
-
-cannons.on_construct_locks = function(pos)
-	local node = minetest.get_node({x = pos.x ,y = pos.y-1, z = pos.z})
-	if minetest.registered_nodes[node.name].groups.cannonstand then
-		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", cannons.formspec..
-									"field[2,1.3;6,0.7;locks_sent_lock_command;Locked Cannon. Type /help for help:;]"..
-									"button[6,2;1.7,0.7;locks_sent_input;Proceed]")
-		meta:set_string("infotext", "Cannon has no muni and no gunpowder")
-		local inv = meta:get_inventory()
-		inv:set_size("gunpowder", 1)
-		inv:set_size("muni", 1)
-	else
-		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", cannons.disabled_formspec)
-		meta:set_string("infotext", "Cannon is out of order")
 	end
 end
 
@@ -385,38 +343,84 @@ end
 
 cannons.registered_muni = {}
 
-function cannons.register_muni(node,entity)
-	cannons.registered_muni[node] = {}
-	cannons.registered_muni[node].entity = entity
-	local name = node:split(":")
-	cannons.registered_muni[node].entity.name ="cannons:entity_"..name[1].."_"..name[2]
-	cannons.registered_muni[node].entity.on_step = function(self, dtime)
-		self.timer=self.timer+dtime
-		if self.timer >= 0.3 then --easiesst less laggiest way to find out that it left his start position
-			local pos = self.object:get_pos()
-			local node = minetest.get_node(pos)
-
-			if node.name == "air" then
-				local objs = minetest.get_objects_inside_radius({x=pos.x,y=pos.y,z=pos.z}, self.range)
-				for k, obj in pairs(objs) do
-				if obj:get_luaentity() ~= nil then
-					if obj:get_luaentity().name ~= self.name and obj:get_luaentity().name ~= "__builtin:item" then --something other found
-						local mob = obj
-						self.on_mob_hit(self,pos,mob)
-						end
-					elseif obj:is_player() then --player found
-					local player = obj
-						self.on_player_hit(self,pos,player)
-					end		
-				end
-			elseif node.name ~= "air"  then
-				self.on_node_hit(self,pos,node)
+function cannons.register_muni(name, def)
+	local splitted_name = name:split(":")
+	local entity = {
+		name = "cannons:entity_"..splitted_name[1].."_"..splitted_name[2],
+		physical = false,
+		timer=0,
+		textures = def.textures,
+		lastpos = {},
+		damage = def.damage,
+		visual = def.visual or "sprite",
+		visual_size = {x=0.5, y=0.5},
+		range = def.range,
+		gravity = def.gravity,
+		velocity = def.velocity,
+		collisionbox = {-0.25,-0.25,-0.25, 0.25,0.25,0.25},
+		on_player_hit = def.on_player_hit or function(self, pos, player)
+			local playername = player:get_player_name()
+			player:punch(self.object, 1.0, {
+				full_punch_interval=1.0,
+				damage_groups={fleshy=self.damage},
+			}, nil)
+			self.object:remove()
+			minetest.chat_send_all(playername .." tried to catch a canonball")
+		end,
+		on_mob_hit = def.on_mob_hit or function(self, pos, mob)
+			mob:punch(self.object, 1.0, {
+				full_punch_interval=1.0,
+				damage_groups={fleshy=self.damage},
+				}, nil)
+			self.object:remove()
+		end,
+		on_node_hit = def.on_node_hit or function(self, pos, node)
+			cannons.nodehitparticles(pos,node)
+			if node.name == "default:dirt_with_grass" then			
+				minetest.env:set_node({x=pos.x, y=pos.y, z=pos.z},{name="default:dirt"})
+				minetest.sound_play("cannons_hit",
+					{pos = pos, gain = 1.0, max_hear_distance = 32,})
+				self.object:remove()
+			elseif node.name == "default:water_source" then
+			minetest.sound_play("cannons_splash",
+				{pos = pos, gain = 1.0, max_hear_distance = 32,})
+				self.object:remove()
+			else
+			minetest.sound_play("cannons_hit",
+				{pos = pos, gain = 1.0, max_hear_distance = 32,})
+				self.object:remove()
+			end
+		end,
+		on_step = function(self, dtime)
+			self.timer=self.timer+dtime
+			if self.timer >= 0.3 then --easiesst less laggiest way to find out that it left his start position
+				local pos = self.object:get_pos()
+				local node = minetest.get_node(pos)
+	
+				if node.name == "air" then
+					local objs = minetest.get_objects_inside_radius({x=pos.x,y=pos.y,z=pos.z}, self.range)
+					for k, obj in pairs(objs) do
+					if obj:get_luaentity() ~= nil then
+						if obj:get_luaentity().name ~= self.name and obj:get_luaentity().name ~= "__builtin:item" then --something other found
+							local mob = obj
+							self.on_mob_hit(self,pos,mob)
+							end
+						elseif obj:is_player() then --player found
+						local player = obj
+							self.on_player_hit(self,pos,player)
+						end		
+					end
+				elseif node.name ~= "air"  then
+					self.on_node_hit(self,pos,node)
+				end	
+				self.lastpos={x=pos.x, y=pos.y, z=pos.z}
 			end	
-			self.lastpos={x=pos.x, y=pos.y, z=pos.z}
-		end	
-	end
-	cannons.registered_muni[node].obj = entity.name
-	minetest.register_entity(entity.name, cannons.registered_muni[node].entity)
+		end,
+	}
+	cannons.registered_muni[name] = {}
+	cannons.registered_muni[name].entity = entity
+	cannons.registered_muni[name].obj = entity.name
+	minetest.register_entity(entity.name, cannons.registered_muni[name].entity)
 end
 
 function cannons.is_muni(node)
@@ -445,7 +449,7 @@ end
 --++++++++++++++++++++++++++++++++++++
 --+ cannons ball stack               +
 --++++++++++++++++++++++++++++++++++++
-function cannons.on_ball_punch(pos, node, puncher, pointed_thing)
+function cannons.on_ball_punch(pos, node, puncher, _)
 	if not puncher or not puncher:is_player() then
 	  return
 	end
@@ -461,7 +465,7 @@ function cannons.on_ball_punch(pos, node, puncher, pointed_thing)
 	end
 end
 
-function cannons.on_ball_rightclick(pos, node, player, itemstack, pointed_thing)
+function cannons.on_ball_rightclick(pos, node, player, itemstack, _)
 	if not player or not player:is_player() then
 	  return
 	end
