@@ -1,5 +1,7 @@
 # Welcome to the cannons mod #
 
+*Note: README is not up to date*
+
 cannons is a mod for the game minetest written by Kingarthurs Team
 (Semmett9, eythen, and addi)
 
